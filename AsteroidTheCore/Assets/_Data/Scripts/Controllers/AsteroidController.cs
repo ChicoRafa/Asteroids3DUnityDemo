@@ -27,6 +27,7 @@ public class AsteroidController : MonoBehaviour, IDamageable
         if (damageable != null)
         {
             damageable.MakeDamage(1);
+            gameManager.RemainingAsteroids--;
             SpawnPool.Instance.Despawn(transform);
         }
     }

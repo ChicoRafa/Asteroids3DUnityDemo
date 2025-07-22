@@ -10,6 +10,21 @@
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
 
+# Visual Studio 2015 user specific files
+.vs/
+
+# JetBrains Rider
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/

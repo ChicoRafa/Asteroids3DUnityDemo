@@ -1,11 +1,12 @@
 # Asteroids 3D
 
-## Controles
+## Controls
 
-movimiento: WASD
-sprint: shift
-disparo: click izq
-cámara: mouse
+Movement: WASD, Left Stick
+Sprint: Shift, Left Trigger
+Shoot: Left Click, Right Trigger
+Camera: Mouse, Right Stick
+Pause: ESC, Start Button
 
 ## Credits
 

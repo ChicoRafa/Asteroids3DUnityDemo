@@ -30,7 +30,7 @@ public class SpawnPool : MonoBehaviour {
                 spawnedObjects.Add(transformInstance);
 
                 transformInstance.parent = parent;
-                if (parent != null) {
+                if (parent) {
                     transformInstance.localPosition = position;
                     transformInstance.localRotation = rotation;
                 } else {
@@ -46,7 +46,7 @@ public class SpawnPool : MonoBehaviour {
         public Transform SpawnNew(Vector3 position, Quaternion rotation, Transform parent = null) {
             GameObject instanceGameObject;
             instanceGameObject = GameObject.Instantiate(this.prefabGameObject, position, rotation, parent);
-            if (parent != null) {
+            if (parent) {
                 instanceGameObject.transform.localPosition = position;
                 instanceGameObject.transform.localRotation = rotation;
             }
@@ -66,18 +66,17 @@ public class SpawnPool : MonoBehaviour {
             trans.gameObject.SetActive(false);
         }
 
-        public void PreloadInstances(Transform parent = null) {
-            if (!isPreloaded) {
+        public void PreloadInstances(Transform parent = null)
+        {
+            if (isPreloaded) return;
+            isPreloaded = true;
 
-                isPreloaded = true;
+            spawnedObjects = new HashSet<Transform>();
+            despawnedObjects = new HashSet<Transform>();
 
-                spawnedObjects = new HashSet<Transform>();
-                despawnedObjects = new HashSet<Transform>();
-
-                for (int i = 0; i < preloadedAmount; i++) {
-                    Transform trans = SpawnNew(Vector3.zero, Quaternion.identity, parent);
-                    DespawnInstance(trans);
-                }
+            for (int i = 0; i < preloadedAmount; i++) {
+                Transform trans = SpawnNew(Vector3.zero, Quaternion.identity, parent);
+                DespawnInstance(trans);
             }
         }
 
@@ -99,7 +98,7 @@ public class SpawnPool : MonoBehaviour {
 
     private void Awake() {
         //Singleton
-        if (Instance == null) {
+        if (!Instance) {
             Instance = this;
         } else if (Instance != null) {
             Destroy(this);

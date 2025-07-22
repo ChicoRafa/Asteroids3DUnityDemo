@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour, IDamageable
     private bool canMove = true;
 
     private GameManager gameManager;
+    private PauseMenuManager pauseMenuManager;
 
     //Ship Movement parameters
     [Header("Ship Movement parameters")] [Tooltip("The velocity of the ship")]
@@ -50,6 +51,7 @@ public class PlayerController : MonoBehaviour, IDamageable
     void Start()
     {
         gameManager = FindFirstObjectByType<GameManager>();
+        pauseMenuManager = FindFirstObjectByType<PauseMenuManager>();
         audioSource = GetComponent<AudioSource>();
         //gets the rigidbody component from the player object
         playerRigidbody = GetComponent<Rigidbody>();
@@ -72,8 +74,11 @@ public class PlayerController : MonoBehaviour, IDamageable
     {
         AllowMovement();
         //rotates the ship to face the mouse
-        playerRigidbody.rotation = Quaternion.RotateTowards(playerRigidbody.rotation, shipRotation,
-            shipRotationSpeed * Time.fixedDeltaTime);
+        playerRigidbody.rotation = Quaternion.RotateTowards(
+            playerRigidbody.rotation,
+            Quaternion.Normalize(shipRotation),
+            shipRotationSpeed * Time.fixedDeltaTime
+        );
     }
 
     public void OnMove(InputValue inputValue)
@@ -94,17 +99,23 @@ public class PlayerController : MonoBehaviour, IDamageable
 
     public void OnLook(InputValue inputValue)
     {
-        Vector2 mousePosition = inputValue.Get<Vector2>();
-        //converts the mouse position to a world position based on the camera position and the distance from the camera to the ship
-        float zCoord = mainCamera.transform.position.y - playerRigidbody.position.y;
-        Vector3 worldMousePosition =
-            mainCamera.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, zCoord));
-        //gets the direction the ship should face
-        Vector3 shipForward = worldMousePosition - transform.position;
-        //sets the y value to 0 to ensure the ship doesn't rotate up or down
-        shipForward.y = 0f;
-        //sets the rotation of the ship to face the mouse   
-        shipRotation = Quaternion.LookRotation(shipForward);
+        Vector2 lookInput = inputValue.Get<Vector2>();
+
+        // If the input is from the mouse (large values), use absolute position
+        if (Mouse.current != null && lookInput.magnitude > 10f)
+        {
+            float zCoord = mainCamera.transform.position.y - playerRigidbody.position.y;
+            Vector3 worldMousePosition = mainCamera.ScreenToWorldPoint(new Vector3(lookInput.x, lookInput.y, zCoord));
+            Vector3 shipForward = worldMousePosition - transform.position;
+            shipForward.y = 0f;
+            shipRotation = Quaternion.LookRotation(shipForward);
+        }
+        // If the input is from the right stick (small values), use relative direction
+        else if (lookInput.sqrMagnitude > 0.01f)
+        {
+            Vector3 direction = new Vector3(lookInput.x, 0f, lookInput.y);
+            shipRotation = Quaternion.LookRotation(direction);
+        }
     }
 
     public void OnSprint(InputValue inputValue)
@@ -125,6 +136,13 @@ public class PlayerController : MonoBehaviour, IDamageable
         }
     }
 
+    public void OnPause(InputValue inputValue)
+    {
+        if (pauseMenuManager)
+        {
+            pauseMenuManager.OnPause(inputValue);
+        }
+    }
     private void RestoreShipSpeed()
     {
         shipSpeed = originalShipSpeed;
@@ -136,11 +154,9 @@ public class PlayerController : MonoBehaviour, IDamageable
         {
             sprintEnergy -= 10f;
             sprintBar.FillAmout -= 0.1f;
-            if (sprintEnergy < 0)
-            {
-                sprintEnergy = 0;
-                InvokeRepeating(nameof(RestoreShipEnergy), 1f, 1f);
-            }
+            if (!(sprintEnergy < 0)) return;
+            sprintEnergy = 0;
+            InvokeRepeating(nameof(RestoreShipEnergy), 1f, 1f);
         }
         else
         {
@@ -200,7 +216,7 @@ public class PlayerController : MonoBehaviour, IDamageable
         {
             gameManager.Lives -= damage;
             isAlive = false;
-            gameManager.SetState(GameState.GameOver);
+            gameManager.CheckEndGame();
         }
     }
 }

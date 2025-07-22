@@ -6,7 +6,8 @@ public enum GameState
 {
     Playing,
     GameOver,
-    LevelFinished
+    LevelFinished,
+    Paused
 }
 public class GameManager : MonoBehaviour
 {
@@ -19,6 +20,7 @@ public class GameManager : MonoBehaviour
     public TMP_Text livesText;
     [Header("Remaining Asteroids")]
     [SerializeField] private int remainingAsteroids;
+    private PauseMenuManager pauseMenuManager;
     
     
 
@@ -40,13 +42,14 @@ public class GameManager : MonoBehaviour
             remainingAsteroids = value;
             if (remainingAsteroids <= 0)
             {
-                SetState(GameState.LevelFinished);
+                CheckEndGame();
             }
         }
     }
 
     private void Start()
     {
+        pauseMenuManager = FindFirstObjectByType<PauseMenuManager>();
         SetState(currentState);
         gameOverPanel.SetActive(false);
         levelFinishedPanel.SetActive(false);
@@ -58,7 +61,10 @@ public class GameManager : MonoBehaviour
         switch (currentState)
         {
             case GameState.Playing:
-                Time.timeScale = 1f;
+                if (!pauseMenuManager || !pauseMenuManager.IsPaused)
+                {
+                    Time.timeScale = 1f;
+                }
                 break;
             case GameState.LevelFinished:
                 levelFinishedPanel.SetActive(true);
@@ -68,6 +74,18 @@ public class GameManager : MonoBehaviour
                 gameOverPanel.SetActive(true);
                Time.timeScale = 0f;
                 break;
+        }
+    }
+    
+    public void CheckEndGame()
+    {
+        if (lives <= 0)
+        {
+            SetState(GameState.GameOver);
+        }
+        else if (remainingAsteroids <= 0)
+        {
+            SetState(GameState.LevelFinished);
         }
     }
 }
